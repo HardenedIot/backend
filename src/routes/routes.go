@@ -7,8 +7,7 @@ import (
 )
 
 func addRoutes(path string, r *gin.Engine,
-	GetHandler gin.HandlerFunc,
-	PatchHandler gin.HandlerFunc, DeleteHandler gin.HandlerFunc) {
+	GetHandler gin.HandlerFunc, PatchHandler gin.HandlerFunc, DeleteHandler gin.HandlerFunc) {
 	group := r.Group(path)
 
 	group.GET(":key", GetHandler)

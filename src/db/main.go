@@ -13,9 +13,9 @@ import (
 var DB *gorm.DB
 
 func ConnectDB() error {
-	host := os.Getenv("DB_HOST")
+	host := os.Getenv("POSTGRES_HOST")
 	if host == "" {
-		log.Fatalln("DB_HOST is not specified")
+		log.Fatalln("POSTGRES_HOST is not specified")
 	}
 
 	user := os.Getenv("POSTGRES_USER")
@@ -37,6 +37,9 @@ func ConnectDB() error {
 		log.Fatalln(err)
 	}
 	password := strings.TrimSpace(string(passwordByte))
+	if password == "" {
+		log.Fatalln("POSTGRES_PASSWORD is not specified")
+	}
 
 	timezone := os.Getenv("TIMEZONE")
 	if timezone == "" {
@@ -65,6 +68,8 @@ func ConnectDB() error {
 	DB.AutoMigrate(&models.User{})
 	DB.AutoMigrate(&models.Team{})
 	DB.AutoMigrate(&models.Project{})
+
+	log.Println("Connected to Postgres")
 
 	return nil
 }
