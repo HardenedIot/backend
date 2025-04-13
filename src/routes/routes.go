@@ -6,39 +6,48 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func addRoutes(path string, r *gin.Engine,
-	GetHandler gin.HandlerFunc, PatchHandler gin.HandlerFunc, DeleteHandler gin.HandlerFunc) {
-	group := r.Group(path)
-
-	group.GET(":key", GetHandler)
-	group.PATCH(":key", PatchHandler)
-	group.DELETE(":key", DeleteHandler)
-}
-
 func getRoutes(r *gin.Engine) {
 	r.GET("/health", handlers.Health)
 
-	group := r.Group("/auth")
+	authGroup := r.Group("/auth")
 	{
-		group.POST("/register", handlers.Health)
-		group.POST("/login", handlers.Health)
+		authGroup.POST("/register", handlers.Health)
+		authGroup.POST("/login", handlers.Health)
 	}
 
-	r.GET("/users", handlers.ListHandler)
-	r.POST("/users", handlers.CreateHandler)
-	addRoutes("/users", r,
-		handlers.GetHandler,
-		handlers.PatchHandler, handlers.DeleteHandler)
+	usersGroup := r.Group("/users")
+	{
+		usersGroup.GET("", handlers.ListUsers)
+		usersGroup.POST("", handlers.CreateUser)
+		usersGroup.GET(":username", handlers.GetUser)
+		usersGroup.PATCH(":username", handlers.PatchUser)
+		usersGroup.DELETE(":username", handlers.DeleteUser)
+	}
 
-	r.GET("/teams", handlers.ListHandler)
-	r.POST("/teams", handlers.CreateHandler)
-	addRoutes("/teams", r,
-		handlers.GetHandler,
-		handlers.PatchHandler, handlers.DeleteHandler)
+	teamsGroup := r.Group("/teams")
+	{
+		teamsGroup.GET("", handlers.ListTeams)
+		teamsGroup.POST("", handlers.CreateTeam)
+		teamsGroup.GET(":team_id", handlers.GetTeam)
+		teamsGroup.PATCH(":team_id", handlers.PatchTeam)
+		teamsGroup.DELETE(":team_id", handlers.DeleteTeam)
+	}
 
-	r.GET("/projects", handlers.ListHandler)
-	r.POST("/projects", handlers.CreateHandler)
-	addRoutes("/projects", r,
-		handlers.GetHandler,
-		handlers.PatchHandler, handlers.DeleteHandler)
+	projectsGroup := r.Group("/projects")
+	{
+		projectsGroup.GET("", handlers.ListProjects)
+		projectsGroup.POST("", handlers.CreateProject)
+		projectsGroup.GET(":project_id", handlers.GetProject)
+		projectsGroup.PATCH(":project_id", handlers.PatchProject)
+		projectsGroup.DELETE(":project_id", handlers.DeleteProject)
+	}
+
+	tasksGroup := r.Group("/project/:project_id")
+	{
+		tasksGroup.POST("/init", handlers.Health)
+		tasksGroup.GET("/tasks", handlers.GetTasks)
+		tasksGroup.PUT("/tasks", handlers.PutTask)
+		tasksGroup.PATCH("/tasks", handlers.PatchTask)
+		tasksGroup.DELETE("/tasks", handlers.DeleteTask)
+	}
 }
