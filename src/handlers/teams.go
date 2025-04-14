@@ -3,7 +3,6 @@ package handlers
 import (
 	"hardenediot-client-service/db"
 	"hardenediot-client-service/models"
-	"hardenediot-client-service/validator"
 	"log"
 	"net/http"
 
@@ -23,7 +22,7 @@ func ListTeams(ctx *gin.Context) {
 
 func CreateTeam(ctx *gin.Context) {
 	var team models.Team
-	if err := ctx.ShouldBindJSON(&team); err != nil || validator.Validate.Struct(team) != nil {
+	if err := ctx.ShouldBindJSON(&team); err != nil || validate.Struct(team) != nil {
 		log.Printf("Invalid team data: %v", err)
 		ctx.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 		return

@@ -5,7 +5,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
+
+var validate = validator.New()
 
 func Health(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"status": "healthy"})

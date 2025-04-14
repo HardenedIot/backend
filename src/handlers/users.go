@@ -3,7 +3,6 @@ package handlers
 import (
 	"hardenediot-client-service/db"
 	"hardenediot-client-service/models"
-	"hardenediot-client-service/validator"
 	"log"
 	"net/http"
 
@@ -23,7 +22,7 @@ func ListUsers(ctx *gin.Context) {
 
 func CreateUser(ctx *gin.Context) {
 	var user models.User
-	if err := ctx.ShouldBindJSON(&user); err != nil || validator.Validate.Struct(user) != nil {
+	if err := ctx.ShouldBindJSON(&user); err != nil || validate.Struct(user) != nil {
 		log.Printf("Invalid user data: %v", err)
 		ctx.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 		return
@@ -61,7 +60,6 @@ func PatchUser(ctx *gin.Context) {
 		return
 	}
 
-	// Update user fields based on the patch request
 	if patchRequest.Username != nil {
 		user.Username = *patchRequest.Username
 	}

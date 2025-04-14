@@ -11,7 +11,8 @@ import (
 )
 
 var Client *mongo.Client
-var ctx = context.TODO()
+var Ctx = context.TODO()
+var DB *mongo.Database
 
 func ConnectDB() error {
 	host := os.Getenv("MONGO_HOST")
@@ -51,16 +52,21 @@ func ConnectDB() error {
 	dsnBuilder.WriteString(host)
 	dsnBuilder.WriteString(":27017/")
 	dsnBuilder.WriteString(dbName)
+	dsnBuilder.WriteString("?ssl=false")
+	dsnBuilder.WriteString("&authMechanism=SCRAM-SHA-256")
+	dsnBuilder.WriteString("&authSource=admin")
 
 	clientOptions := options.Client().ApplyURI(dsnBuilder.String())
 
-	Client, err = mongo.Connect(ctx, clientOptions)
+	Client, err = mongo.Connect(Ctx, clientOptions)
 	if err != nil {
 		log.Fatalln(err)
 		return err
 	}
 
-	err = Client.Ping(ctx, nil)
+	DB = Client.Database("projects")
+
+	err = Client.Ping(Ctx, nil)
 	if err != nil {
 		log.Fatalln(err)
 		return err
@@ -68,13 +74,11 @@ func ConnectDB() error {
 
 	log.Println("Connected to Mongo")
 
-	// You can perform any necessary migrations or initializations here
-
 	return nil
 }
 
 func DisconnectDB() {
-	if err := Client.Disconnect(ctx); err != nil {
+	if err := Client.Disconnect(Ctx); err != nil {
 		log.Fatalln(err)
 	}
 	log.Println("Disconnected from MongoDB.")

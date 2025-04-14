@@ -3,7 +3,6 @@ package handlers
 import (
 	"hardenediot-client-service/db"
 	"hardenediot-client-service/models"
-	"hardenediot-client-service/validator"
 	"log"
 	"net/http"
 
@@ -23,7 +22,7 @@ func ListProjects(ctx *gin.Context) {
 
 func CreateProject(ctx *gin.Context) {
 	var project models.Project
-	if err := ctx.ShouldBindJSON(&project); err != nil || validator.Validate.Struct(project) != nil {
+	if err := ctx.ShouldBindJSON(&project); err != nil || validate.Struct(project) != nil {
 		log.Printf("Invalid project data: %v", err)
 		ctx.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 		return
