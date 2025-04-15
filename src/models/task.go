@@ -15,6 +15,7 @@ type Task struct {
 	Description string     `json:"description" validate:"max=500"`
 	RiskLevel   RiskLevel  `json:"risk_level" validate:"required,min=1,max=3"`
 	Completed   bool       `json:"completed"`
+	Ignored     bool       `json:"ignored"`
 }
 
 type PatchTaskRequest struct {
@@ -24,4 +25,5 @@ type PatchTaskRequest struct {
 	Description *string     `json:"description,omitempty"`
 	RiskLevel   *RiskLevel  `json:"risk_level,omitempty"`
 	Completed   *bool       `json:"completed,omitempty"`
+	Ignored     bool        `json:"ignored,omitempty"`
 }

@@ -3,6 +3,8 @@ package routes
 import (
 	"hardenediot-client-service/handlers"
 
+	"hardenediot-client-service/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,11 +13,12 @@ func getRoutes(r *gin.Engine) {
 
 	authGroup := r.Group("/auth")
 	{
-		authGroup.POST("/register", handlers.Health)
-		authGroup.POST("/login", handlers.Health)
+		authGroup.POST("/register", handlers.RegisterUser)
+		authGroup.POST("/login", handlers.LoginUser)
 	}
 
 	usersGroup := r.Group("/users")
+	usersGroup.Use(middleware.JWTAuthMiddleware())
 	{
 		usersGroup.GET("", handlers.ListUsers)
 		usersGroup.POST("", handlers.CreateUser)
@@ -25,6 +28,7 @@ func getRoutes(r *gin.Engine) {
 	}
 
 	teamsGroup := r.Group("/teams")
+	teamsGroup.Use(middleware.JWTAuthMiddleware())
 	{
 		teamsGroup.GET("", handlers.ListTeams)
 		teamsGroup.POST("", handlers.CreateTeam)
@@ -34,6 +38,7 @@ func getRoutes(r *gin.Engine) {
 	}
 
 	projectsGroup := r.Group("/projects")
+	projectsGroup.Use(middleware.JWTAuthMiddleware())
 	{
 		projectsGroup.GET("", handlers.ListProjects)
 		projectsGroup.POST("", handlers.CreateProject)
@@ -43,6 +48,7 @@ func getRoutes(r *gin.Engine) {
 	}
 
 	tasksGroup := r.Group("/project/:project_id")
+	tasksGroup.Use(middleware.JWTAuthMiddleware())
 	{
 		tasksGroup.POST("/init", handlers.Health)
 		tasksGroup.GET("/tasks", handlers.GetTasks)

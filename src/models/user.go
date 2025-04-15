@@ -6,6 +6,7 @@ type User struct {
 	Name     string `json:"name" validate:"required,min=1,max=50"`
 	Surname  string `json:"surname" validate:"required,min=1,max=50"`
 	Email    string `json:"email" gorm:"unique" validate:"required,email"`
+	Password string `json:"-" gorm:"not null"`
 	Private  bool   `json:"private"`
 	Teams    []Team `json:"teams" gorm:"many2many:user_teams;"`
 }
