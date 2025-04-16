@@ -2,7 +2,7 @@ package main
 
 import (
 	"hardenediot-client-service/db"
-	"hardenediot-client-service/routes"
+	routes "hardenediot-client-service/router"
 	"hardenediot-client-service/security"
 	"hardenediot-client-service/storage"
 

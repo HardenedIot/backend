@@ -1,8 +1,8 @@
 package middleware
 
 import (
+	"hardenediot-client-service/security"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -10,11 +10,6 @@ import (
 )
 
 func JWTAuthMiddleware() gin.HandlerFunc {
-	secret := os.Getenv("SECRET")
-	if secret == "" {
-		panic("SECRET environment variable is not set")
-	}
-
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -34,7 +29,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}
-			return []byte(secret), nil
+			return []byte(security.Secret), nil
 		})
 
 		if err != nil || !token.Valid {

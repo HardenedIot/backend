@@ -6,7 +6,6 @@ import (
 	"hardenediot-client-service/security"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -75,7 +74,7 @@ func RegisterUser(ctx *gin.Context) {
 
 func LoginUser(ctx *gin.Context) {
 	var input struct {
-		Username string `json:"username" binding:"required"`
+		Email    string `json:"email" binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
 
@@ -85,21 +84,14 @@ func LoginUser(ctx *gin.Context) {
 	}
 
 	var user models.User
-	if err := db.DB.Where("username = ?", input.Username).First(&user).Error; err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
+	if err := db.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
 
 	hashedInputPassword := security.GeneratePasswordHash(input.Password)
 	if hashedInputPassword != user.Password {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
-		return
-	}
-
-	secret := os.Getenv("SECRET")
-	if secret == "" {
-		log.Println("SECRET not configured")
-		ctx.JSON(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
 
@@ -108,7 +100,7 @@ func LoginUser(ctx *gin.Context) {
 		"exp": time.Now().Add(time.Hour * 72).Unix(),
 	})
 
-	tokenString, err := token.SignedString([]byte(secret))
+	tokenString, err := token.SignedString([]byte(security.Secret))
 	if err != nil {
 		log.Println("Failed to generate token")
 		ctx.JSON(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))

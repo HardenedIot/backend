@@ -57,3 +57,4 @@ func getRoutes(r *gin.Engine) {
 		tasksGroup.DELETE("/tasks", handlers.DeleteTask)
 	}
 }
+
