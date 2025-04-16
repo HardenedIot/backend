@@ -75,6 +75,9 @@ func PatchProject(ctx *gin.Context) {
 	if patchRequest.URL != nil {
 		project.URL = *patchRequest.URL
 	}
+	if patchRequest.Technologies != nil {
+		project.Technologies = *patchRequest.Technologies
+	}
 
 	if err := db.DB.Save(&project).Error; err != nil {
 		log.Printf("Error updating project: %v", err)

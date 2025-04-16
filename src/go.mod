@@ -1,4 +1,4 @@
-module hardenediot-client-service
+module hardenediot
 
 go 1.23.6
 

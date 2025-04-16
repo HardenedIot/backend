@@ -56,5 +56,10 @@ func getRoutes(r *gin.Engine) {
 		tasksGroup.PATCH("/tasks", handlers.PatchTask)
 		tasksGroup.DELETE("/tasks", handlers.DeleteTask)
 	}
-}
 
+	technologiesGroup := r.Group("/technologies")
+	technologiesGroup.Use(middleware.JWTAuthMiddleware())
+	{
+		technologiesGroup.GET("", handlers.ListTechnologies)
+	}
+}
