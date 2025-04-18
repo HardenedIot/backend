@@ -4,11 +4,13 @@ import (
 	"hardenediot/db"
 	"hardenediot/models"
 	"hardenediot/storage"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func projectExists(projectID string) bool {
@@ -43,7 +45,7 @@ func GetTasks(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, tasks)
 }
 
-func PutTask(ctx *gin.Context) {
+func CreateTask(ctx *gin.Context) {
 	projectID := ctx.Param("project_id")
 	if !projectExists(projectID) {
 		ctx.JSON(http.StatusNotFound, http.StatusText(http.StatusNotFound))
@@ -89,14 +91,18 @@ func PatchTask(ctx *gin.Context) {
 	}
 
 	var task models.Task
-	if err := storage.DB.Collection(projectID).FindOne(ctx, bson.M{"task_id": patchRequest.TaskID}).Decode(&task); err != nil {
-		ctx.JSON(http.StatusNotFound, http.StatusText(http.StatusNotFound))
+	err := storage.DB.Collection(projectID).FindOne(storage.Ctx, bson.M{"task_id": patchRequest.TaskID}).Decode(&task)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			ctx.JSON(http.StatusNotFound, http.StatusText(http.StatusNotFound))
+		} else {
+			ctx.JSON(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		}
+		log.Println(err)
 		return
 	}
 
-	if patchRequest.TaskID != nil {
-		task.TaskID = *patchRequest.TaskID
-	}
+	task.TaskID = patchRequest.TaskID
 	if patchRequest.Technology != nil {
 		task.Technology = *patchRequest.Technology
 	}
@@ -113,9 +119,14 @@ func PatchTask(ctx *gin.Context) {
 		task.Completed = *patchRequest.Completed
 	}
 
-	_, err := storage.DB.Collection(projectID).UpdateOne(ctx, bson.M{"task_id": task.TaskID}, bson.M{"$set": task})
+	updateResult, err := storage.DB.Collection(projectID).UpdateOne(ctx, bson.M{"task_id": patchRequest.TaskID}, bson.M{"$set": task})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		return
+	}
+
+	if updateResult.MatchedCount == 0 {
+		ctx.JSON(http.StatusNotFound, http.StatusText(http.StatusNotFound))
 		return
 	}
 
@@ -129,9 +140,7 @@ func DeleteTask(ctx *gin.Context) {
 		return
 	}
 
-	var request struct {
-		TaskID string `json:"task_id" binding:"required"`
-	}
+	var request models.PatchTaskRequest
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
 		ctx.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))

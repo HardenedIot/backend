@@ -1,12 +1,15 @@
 package handlers
 
 import (
+	"encoding/json"
 	"hardenediot/db"
 	"hardenediot/models"
+	"hardenediot/storage"
 	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func ListProjects(ctx *gin.Context) {
@@ -27,13 +30,62 @@ func CreateProject(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 		return
 	}
+
 	if err := db.DB.Create(&project).Error; err != nil {
 		log.Printf("Error creating project: %v", err)
 		ctx.JSON(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 		return
 	}
+
+	resp, err := http.Get("https://raw.githubusercontent.com/HardenedIot/data/main/data.json")
+	if err != nil {
+		log.Printf("Error fetching tasks: %v", err)
+		ctx.JSON(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		return
+	}
+	defer resp.Body.Close()
+
+	var tasks []models.Task
+	if err := json.NewDecoder(resp.Body).Decode(&tasks); err != nil {
+		log.Printf("Error decoding JSON: %v", err)
+		ctx.JSON(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		return
+	}
+
+	for _, jsonTask := range tasks {
+		if isTechnologyInProject(jsonTask.Technology, project.Technologies) {
+			count, err := storage.DB.Collection(project.ProjectID).CountDocuments(ctx, bson.M{"task_id": jsonTask.TaskID})
+			if err != nil {
+				log.Printf("Error counting documents: %v", err)
+				ctx.JSON(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+				return
+			}
+
+			if count > 0 {
+				ctx.JSON(http.StatusConflict, http.StatusText(http.StatusConflict))
+				return
+			}
+
+			_, err = storage.DB.Collection(project.ProjectID).InsertOne(ctx, jsonTask)
+			if err != nil {
+				log.Printf("Error inserting task: %v", err)
+				ctx.JSON(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+				return
+			}
+		}
+	}
+
 	log.Printf("Project created: %v", project)
 	ctx.JSON(http.StatusCreated, project)
+}
+
+func isTechnologyInProject(tech models.Technology, technologies models.StringSlice) bool {
+	for _, t := range technologies {
+		if t == tech {
+			return true
+		}
+	}
+	return false
 }
 
 func GetProject(ctx *gin.Context) {

@@ -47,19 +47,14 @@ func getRoutes(r *gin.Engine) {
 		projectsGroup.DELETE(":project_id", handlers.DeleteProject)
 	}
 
-	tasksGroup := r.Group("/project/:project_id")
+	tasksGroup := r.Group("/project")
 	tasksGroup.Use(middleware.JWTAuthMiddleware())
 	{
-		tasksGroup.POST("/init", handlers.Health)
-		tasksGroup.GET("/tasks", handlers.GetTasks)
-		tasksGroup.PUT("/tasks", handlers.PutTask)
-		tasksGroup.PATCH("/tasks", handlers.PatchTask)
-		tasksGroup.DELETE("/tasks", handlers.DeleteTask)
+		tasksGroup.GET(":project_id", handlers.GetTasks)
+		tasksGroup.POST(":project_id", handlers.CreateTask)
+		tasksGroup.PATCH(":project_id", handlers.PatchTask)
+		tasksGroup.DELETE(":project_id", handlers.DeleteTask)
 	}
 
-	technologiesGroup := r.Group("/technologies")
-	technologiesGroup.Use(middleware.JWTAuthMiddleware())
-	{
-		technologiesGroup.GET("", handlers.ListTechnologies)
-	}
+	r.GET("/technologies", handlers.ListTechnologies)
 }
