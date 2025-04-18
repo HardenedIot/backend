@@ -1,0 +1,85 @@
+name: hiot_devcontainers
+
+services:
+  devcontainer:
+    container_name: hiot_devcontainer
+    image: mcr.microsoft.com/devcontainers/go:1-1.23-bookworm
+    command: sleep infinity
+    env_file:
+      - .env
+    secrets:
+      - postgres_pass
+      - mongo_pass
+    volumes:
+      - ..:/workspaces:cached
+    networks:
+      - main
+
+  postgres:
+    container_name: hiot_postgres_dev
+    restart: always
+    image: postgres:17
+    env_file:
+      - .env
+    secrets:
+      - postgres_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - main
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "backend"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+  mongo:
+    container_name: hiot_mongo
+    restart: always
+    image: mongo
+    command: ["mongod", "--config", "/etc/mongod.conf"]
+    env_file:
+      - .env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD_FILE: ${MONGO_PASSWORD_FILE}
+    secrets:
+      - mongo_pass
+    configs:
+      - source: mongo_conf
+        target: /etc/mongod.conf
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - main
+    expose:
+      - 27017
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+secrets:
+  postgres_pass:
+    file: ./secrets/postgres.secret
+  mongo_pass:
+    file: ./secrets/mongo.secret
+
+configs:
+  mongo_conf:
+    content: |
+      net:
+        port: 27017
+        bindIp: 0.0.0.0
+        ssl:
+          mode: disabled
+      security:
+        authorization: enabled
+
+volumes:
+  postgres_data:
+  mongo_data:
+
+networks:
+  main:

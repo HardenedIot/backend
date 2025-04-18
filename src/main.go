@@ -1,10 +1,10 @@
 package main
 
 import (
-	"hardenediot-client-service/db"
-	routes "hardenediot-client-service/router"
-	"hardenediot-client-service/security"
-	"hardenediot-client-service/storage"
+	"hardenediot/db"
+	routes "hardenediot/router"
+	"hardenediot/security"
+	"hardenediot/storage"
 
 	"github.com/gin-gonic/gin"
 )

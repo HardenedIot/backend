@@ -1,9 +1,9 @@
 package routes
 
 import (
-	"hardenediot-client-service/handlers"
+	"hardenediot/handlers"
 
-	"hardenediot-client-service/middleware"
+	"hardenediot/middleware"
 
 	"github.com/gin-gonic/gin"
 )

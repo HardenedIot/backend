@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"hardenediot-client-service/db"
-	"hardenediot-client-service/models"
-	"hardenediot-client-service/security"
+	"hardenediot/db"
+	"hardenediot/models"
+	"hardenediot/security"
 	"log"
 	"net/http"
 	"time"

@@ -1,7 +1,7 @@
 package db
 
 import (
-	"hardenediot-client-service/models"
+	"hardenediot/models"
 	"log"
 	"os"
 	"strings"

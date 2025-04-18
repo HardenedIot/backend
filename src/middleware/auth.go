@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"hardenediot-client-service/security"
+	"hardenediot/security"
 	"net/http"
 	"strings"
 

@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"hardenediot-client-service/models"
+	"hardenediot/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"hardenediot-client-service/db"
-	"hardenediot-client-service/models"
+	"hardenediot/db"
+	"hardenediot/models"
 	"log"
 	"net/http"
 
