@@ -118,6 +118,9 @@ func PatchTask(ctx *gin.Context) {
 	if patchRequest.Completed != nil {
 		task.Completed = *patchRequest.Completed
 	}
+	if patchRequest.Ignored != nil {
+		task.Ignored = *patchRequest.Ignored
+	}
 
 	updateResult, err := storage.DB.Collection(projectID).UpdateOne(ctx, bson.M{"task_id": patchRequest.TaskID}, bson.M{"$set": task})
 	if err != nil {
