@@ -1,0 +1,785 @@
+openapi: 3.0.3
+info:
+  title: HardenedIoT Backend API
+  description: OpenAPI specification for the HardenedIoT backend API.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Technology:
+      type: string
+      enum:
+        - wifi
+        - uart
+        - jtag
+        - bluetooth
+        - lte
+        - rfid
+        - nfc
+        - ant+
+        - lifi
+        - zigbee
+        - z-wave
+        - lte-advanced
+        - lora
+        - nb-iot
+        - sigfox
+        - nb-fi
+        - http
+        - https
+        - coap
+        - mqtt
+        - amqp
+        - xmpp
+
+    StringSlice:
+      type: array
+      items:
+        $ref: '#/components/schemas/Technology'
+
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint64
+        project_id:
+          type: string
+          minLength: 1
+          maxLength: 50
+        team_id:
+          type: string
+        team:
+          $ref: '#/components/schemas/Team'
+        project_name:
+          type: string
+          minLength: 3
+          maxLength: 50
+        private:
+          type: boolean
+          nullable: true
+        description:
+          type: string
+          maxLength: 500
+        url:
+          type: string
+          format: uri
+        technologies:
+          $ref: '#/components/schemas/StringSlice'
+      required:
+        - project_id
+        - team_id
+        - project_name
+        - technologies
+
+    PatchProjectRequest:
+      type: object
+      properties:
+        project_name:
+          type: string
+          minLength: 3
+          maxLength: 50
+        team_id:
+          type: string
+        private:
+          type: boolean
+        description:
+          type: string
+          maxLength: 500
+        url:
+          type: string
+          format: uri
+        technologies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Technology'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint64
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        surname:
+          type: string
+          minLength: 1
+          maxLength: 50
+        email:
+          type: string
+          format: email
+        private:
+          type: boolean
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/Team'
+      required:
+        - username
+        - name
+        - surname
+        - email
+        - private
+        - teams
+
+    PatchUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        surname:
+          type: string
+          minLength: 1
+          maxLength: 50
+        email:
+          type: string
+          format: email
+        private:
+          type: boolean
+        team_ids:
+          type: array
+          items:
+            type: integer
+            format: uint64
+
+    Team:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint64
+        team_name:
+          type: string
+          minLength: 3
+          maxLength: 50
+        team_id:
+          type: string
+          minLength: 1
+          maxLength: 50
+        description:
+          type: string
+          maxLength: 200
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        private:
+          type: boolean
+      required:
+        - team_name
+        - team_id
+        - private
+
+    PatchTeamRequest:
+      type: object
+      properties:
+        team_name:
+          type: string
+          minLength: 3
+          maxLength: 50
+        team_id:
+          type: string
+          minLength: 1
+          maxLength: 50
+        description:
+          type: string
+          maxLength: 200
+        users:
+          type: array
+          items:
+            type: string
+        private:
+          type: boolean
+
+    RiskLevel:
+      type: integer
+      enum:
+        - 1
+        - 2
+        - 3
+      description: 1=Low, 2=Medium, 3=High
+
+    Task:
+      type: object
+      properties:
+        task_id:
+          type: string
+        technology:
+          $ref: '#/components/schemas/Technology'
+        name:
+          type: string
+          minLength: 3
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        risk_level:
+          $ref: '#/components/schemas/RiskLevel'
+        completed:
+          type: boolean
+        ignored:
+          type: boolean
+      required:
+        - task_id
+        - technology
+        - name
+        - risk_level
+        - completed
+        - ignored
+
+    PatchTaskRequest:
+      type: object
+      properties:
+        task_id:
+          type: string
+        technology:
+          $ref: '#/components/schemas/Technology'
+        name:
+          type: string
+          minLength: 3
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        risk_level:
+          $ref: '#/components/schemas/RiskLevel'
+        completed:
+          type: boolean
+        ignored:
+          type: boolean
+
+    RegisterUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        name:
+          type: string
+        surname:
+          type: string
+      required:
+        - username
+        - email
+        - password
+
+    LoginUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    LoginUserResponse:
+      type: object
+      properties:
+        token:
+          type: string
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: OK
+
+  /auth/register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+
+  /auth/login:
+    post:
+      summary: Login user and get JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUserRequest'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginUserResponse'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+
+  /users:
+    get:
+      summary: List users (non-private)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '500':
+          description: Internal server error
+    post:
+      summary: Create a new user
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+
+  /users/{username}:
+    get:
+      summary: Get user by username
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+    patch:
+      summary: Update user by username
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchUserRequest'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+        '404':
+          description: User not found
+    delete:
+      summary: Delete user by username
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: User deleted
+        '404':
+          description: User not found
+
+  /teams:
+    get:
+      summary: List teams (non-private)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of teams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Team'
+        '500':
+          description: Internal server error
+    post:
+      summary: Create a new team
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Team'
+      responses:
+        '201':
+          description: Team created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+
+  /teams/{team_id}:
+    get:
+      summary: Get team by team_id
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: team_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Team found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '404':
+          description: Team not found
+    patch:
+      summary: Update team by team_id
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: team_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchTeamRequest'
+      responses:
+        '200':
+          description: Team updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '400':
+          description: Bad request
+        '404':
+          description: Team not found
+    delete:
+      summary: Delete team by team_id
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: team_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Team deleted
+        '404':
+          description: Team not found
+
+  /projects:
+    get:
+      summary: List projects
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+        '500':
+          description: Internal server error
+    post:
+      summary: Create a new project
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '201':
+          description: Project created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Bad request
+        '409':
+          description: Conflict
+        '500':
+          description: Internal server error
+
+  /projects/{project_id}:
+    get:
+      summary: Get project by project_id
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Project found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          description: Project not found
+    patch:
+      summary: Update project by project_id
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchProjectRequest'
+      responses:
+        '200':
+          description: Project updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Bad request
+        '404':
+          description: Project not found
+    delete:
+      summary: Delete project by project_id
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Project deleted
+        '404':
+          description: Project not found
+
+  /project/{project_id}:
+    get:
+      summary: List tasks for a project
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        '404':
+          description: Project not found
+        '500':
+          description: Internal server error
+    post:
+      summary: Create a new task in a project
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+      responses:
+        '200':
+          description: Task created
+        '400':
+          description: Bad request
+        '404':
+          description: Project not found
+        '409':
+          description: Conflict
+        '500':
+          description: Internal server error
+    patch:
+      summary: Update a task in a project
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchTaskRequest'
+      responses:
+        '200':
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Bad request
+        '404':
+          description: Task or project not found
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete a task in a project
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchTaskRequest'
+      responses:
+        '200':
+          description: Task deleted
+        '400':
+          description: Bad request
+        '404':
+          description: Task or project not found
+        '500':
+          description: Internal server error
+
+  /technologies:
+    get:
+      summary: List all technologies
+      responses:
+        '200':
+          description: List of technologies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Technology'

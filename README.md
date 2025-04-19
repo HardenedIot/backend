@@ -9,9 +9,24 @@
 Фреймворки и библиотеки:
 
 - Gin Framework
-- GORM
+- GORM + Postgres driver
+- Mongo driver
 - Validator
 - Golang-JWT
+- Testify
+
+## API, Документация для разработчиков
+
+OpenAPI спецификация доступна [здесь](./openapi.yaml).
+
+## Юнит-тестирование
+
+Проверить работу эндпоинтов можно следующим образом:
+
+```shell
+cd backend/src
+go test ./tests
+```
 
 ## Ссылка на собранный контейнер для развертывания
 
